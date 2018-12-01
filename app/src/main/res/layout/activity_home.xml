@@ -20,7 +20,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="5">
             <ImageView
-            android:id="@+id/logo"
+            android:id="@+id/cameraButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
@@ -33,7 +33,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="5">
             <ImageView
-            android:id="@+id/logo"
+            android:id="@+id/uploadButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
@@ -55,7 +55,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="5">
             <ImageView
-            android:id="@+id/logo"
+            android:id="@+id/infoButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
@@ -68,7 +68,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="5">
             <ImageView
-            android:id="@+id/logo"
+            android:id="@+id/helplineButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
