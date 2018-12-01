@@ -10,6 +10,15 @@ import android.view.SurfaceView;
 import android.view.View;
 import android.widget.Toast;
 
+import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.mime.HttpMultipartMode;
+import org.apache.http.entity.mime.content.FileBody;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.entity.mime.MultipartEntity;
+
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -62,12 +71,26 @@ public class CameraActivity extends Activity implements SurfaceHolder.Callback, 
     public void onPictureTaken(byte[] data, Camera camera) {
         //Here, we chose internal storage
         try {
-
-            FileOutputStream out = new FileOutputStream(String.format("/sdcard/%d.jpg", "waste_image"));
-
-            // FileOutputStream out = openFileOutput("picture.jpg", Activity.MODE_PRIVATE);
+            FileOutputStream out = new FileOutputStream(String.format("/sdcard/%s.jpg", "waste_image"));
             out.write(data);
             out.close();
+
+            HttpClient httpclient = new DefaultHttpClient();
+            HttpPost httppost = new HttpPost("127.0.0.1/8099/class");
+
+            String filePath = "/sdcard/waste_image.jpg";
+            MultipartEntity mpEntity = new MultipartEntity(HttpMultipartMode.BROWSER_COMPATIBLE);
+            if (filePath != null) {
+                File file = new File(filePath);
+                Log.d("EDIT USER PROFILE", "UPLOAD: file length = " + file.length());
+                Log.d("EDIT USER PROFILE", "UPLOAD: file exist = " + file.exists());
+                mpEntity.addPart("avatar", new FileBody(file, "application/octet"));
+            }
+
+            httppost.setEntity(mpEntity);
+            HttpResponse response = httpclient.execute(httppost);
+
+
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         } catch (IOException e) {
