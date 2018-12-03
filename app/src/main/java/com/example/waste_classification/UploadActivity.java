@@ -137,14 +137,7 @@ public class UploadActivity extends Activity {
         }
 
         @Override
-        protected synchronized String doInBackground(Void... params) {
-            return uploadFile();
-        }
-
-        @SuppressWarnings("deprecation")
-        private String uploadFile() {
-
-
+        protected String doInBackground(Void... params) {
             OkHttpClient client = new OkHttpClient();
             File image = new File(filePath);
             RequestBody requestBody = new MultipartBody.Builder().setType(MultipartBody.FORM)
@@ -159,17 +152,11 @@ public class UploadActivity extends Activity {
             } catch (Exception e) {
                 responseString = e.getMessage();
             }
-            new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    s = responseString;
-                }
-            }, 100000);
-            return s;
+            return responseString;
         }
 
         @Override
-        protected synchronized void onPostExecute(String result) {
+        protected void onPostExecute(String result) {
             Log.e(TAG, "Response from server: " + result);
 
             // showing the server response in an alert dialogndl

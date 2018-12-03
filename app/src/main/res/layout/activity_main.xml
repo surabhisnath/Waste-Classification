@@ -22,7 +22,7 @@
         android:paddingLeft="64dp"
         android:paddingRight="64dp"
         android:paddingTop="4dp"
-        android:text="Start the"
+        android:text="Continue"
         android:textAllCaps="false"
         android:textColor="#ffffff" />
 
