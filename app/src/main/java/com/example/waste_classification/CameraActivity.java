@@ -1,126 +1,258 @@
 package com.example.waste_classification;
 
+import java.io.File;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
+
 import android.app.Activity;
-import android.hardware.Camera;
-import android.support.v7.app.AppCompatActivity;
+import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
+import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
+import android.provider.MediaStore;
 import android.util.Log;
-import android.view.SurfaceHolder;
-import android.view.SurfaceView;
 import android.view.View;
+import android.widget.Button;
 import android.widget.Toast;
 
-import org.apache.http.HttpResponse;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.entity.mime.HttpMultipartMode;
-import org.apache.http.entity.mime.content.FileBody;
-import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.http.entity.mime.MultipartEntity;
+public class CameraActivity extends Activity {
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.util.List;
+    // LogCat tag
+    private static final String TAG = MainActivity.class.getSimpleName();
 
-public class CameraActivity extends Activity implements SurfaceHolder.Callback, Camera.ShutterCallback, Camera.PictureCallback {
 
-    Camera mCamera;
-    SurfaceView mPreview;
+    // Camera activity request codes
+    private static final int CAMERA_CAPTURE_IMAGE_REQUEST_CODE = 100;
+    private static final int CAMERA_CAPTURE_VIDEO_REQUEST_CODE = 200;
+
+    public static final int MEDIA_TYPE_IMAGE = 1;
+    public static final int MEDIA_TYPE_VIDEO = 2;
+
+    private Uri fileUri; // file url to store image/video
+
+    private Button btnCapturePicture, btnRecordVideo;
 
     @Override
-    public void onCreate(Bundle savedInstanceState) {
+    protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_camera);
 
-        mPreview = (SurfaceView)findViewById(R.id.preview);
-        mPreview.getHolder().addCallback(this);
-        mPreview.getHolder().setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
+        // Changing action bar background color
+        // These two lines are not needed
 
-        mCamera = Camera.open();
+        btnCapturePicture = (Button) findViewById(R.id.btnCapturePicture);
+        btnRecordVideo = (Button) findViewById(R.id.btnRecordVideo);
+
+        /**
+         * Capture image button click event
+         */
+        btnCapturePicture.setOnClickListener(new View.OnClickListener() {
+
+            @Override
+            public void onClick(View v) {
+                // capture picture
+                captureImage();
+            }
+        });
+
+        /**
+         * Record video button click event
+         */
+        btnRecordVideo.setOnClickListener(new View.OnClickListener() {
+
+            @Override
+            public void onClick(View v) {
+                // record video
+                recordVideo();
+            }
+        });
+
+        // Checking camera availability
+        if (!isDeviceSupportCamera()) {
+            Toast.makeText(getApplicationContext(),
+                    "Sorry! Your device doesn't support camera",
+                    Toast.LENGTH_LONG).show();
+            // will close the app if the device does't have camera
+            finish();
+        }
+    }
+
+    /**
+     * Checking device has camera hardware or not
+     * */
+    private boolean isDeviceSupportCamera() {
+        if (getApplicationContext().getPackageManager().hasSystemFeature(
+                PackageManager.FEATURE_CAMERA)) {
+            // this device has a camera
+            return true;
+        } else {
+            // no camera on this device
+            return false;
+        }
+    }
+
+    /**
+     * Launching camera app to capture image
+     */
+    private void captureImage() {
+        Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+
+        fileUri = getOutputMediaFileUri(MEDIA_TYPE_IMAGE);
+
+        intent.putExtra(MediaStore.EXTRA_OUTPUT, fileUri);
+
+        // start the image capture Intent
+        startActivityForResult(intent, CAMERA_CAPTURE_IMAGE_REQUEST_CODE);
+    }
+
+    /**
+     * Launching camera app to record video
+     */
+    private void recordVideo() {
+        Intent intent = new Intent(MediaStore.ACTION_VIDEO_CAPTURE);
+
+        fileUri = getOutputMediaFileUri(MEDIA_TYPE_VIDEO);
+
+        // set video quality
+        intent.putExtra(MediaStore.EXTRA_VIDEO_QUALITY, 1);
+
+        intent.putExtra(MediaStore.EXTRA_OUTPUT, fileUri); // set the image file
+        // name
+
+        // start the video capture Intent
+        startActivityForResult(intent, CAMERA_CAPTURE_VIDEO_REQUEST_CODE);
+    }
+
+    /**
+     * Here we store the file url as it will be null after returning from camera
+     * app
+     */
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+
+        // save file url in bundle as it will be null on screen orientation
+        // changes
+        outState.putParcelable("file_uri", fileUri);
     }
 
     @Override
-    public void onPause() {
-        super.onPause();
-        mCamera.stopPreview();
+    protected void onRestoreInstanceState(Bundle savedInstanceState) {
+        super.onRestoreInstanceState(savedInstanceState);
+
+        // get the file url
+        fileUri = savedInstanceState.getParcelable("file_uri");
     }
 
+
+
+    /**
+     * Receiving activity result method will be called after closing the camera
+     * */
     @Override
-    public void onDestroy() {
-        super.onDestroy();
-        mCamera.release();
-        Log.d("CAMERA","Destroy");
-    }
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        // if the result is capturing Image
+        if (requestCode == CAMERA_CAPTURE_IMAGE_REQUEST_CODE) {
+            if (resultCode == RESULT_OK) {
 
-    public void onCancelClick(View v) {
-        finish();
-    }
+                // successfully captured the image
+                // launching upload activity
+                launchUploadActivity(true);
 
-    public void onSnapClick(View v) {
-        mCamera.takePicture(this, null, null, this);
-    }
 
-    @Override
-    public void onShutter() {
-        Toast.makeText(this, "Click!", Toast.LENGTH_SHORT).show();
-    }
+            } else if (resultCode == RESULT_CANCELED) {
 
-    @Override
-    public void onPictureTaken(byte[] data, Camera camera) {
-        //Here, we chose internal storage
-        try {
-            FileOutputStream out = new FileOutputStream(String.format("/sdcard/%s.jpg", "waste_image"));
-            out.write(data);
-            out.close();
+                // user cancelled Image capture
+                Toast.makeText(getApplicationContext(),
+                        "User cancelled image capture", Toast.LENGTH_SHORT)
+                        .show();
 
-            HttpClient httpclient = new DefaultHttpClient();
-            HttpPost httppost = new HttpPost("127.0.0.1/8099/class");
-
-            String filePath = "/sdcard/waste_image.jpg";
-            MultipartEntity mpEntity = new MultipartEntity(HttpMultipartMode.BROWSER_COMPATIBLE);
-            if (filePath != null) {
-                File file = new File(filePath);
-                Log.d("EDIT USER PROFILE", "UPLOAD: file length = " + file.length());
-                Log.d("EDIT USER PROFILE", "UPLOAD: file exist = " + file.exists());
-                mpEntity.addPart("avatar", new FileBody(file, "application/octet"));
+            } else {
+                // failed to capture image
+                Toast.makeText(getApplicationContext(),
+                        "Sorry! Failed to capture image", Toast.LENGTH_SHORT)
+                        .show();
             }
 
-            httppost.setEntity(mpEntity);
-            HttpResponse response = httpclient.execute(httppost);
+        } else if (requestCode == CAMERA_CAPTURE_VIDEO_REQUEST_CODE) {
+            if (resultCode == RESULT_OK) {
 
+                // video successfully recorded
+                // launching upload activity
+                launchUploadActivity(false);
 
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        camera.startPreview();
-    }
-    @Override
-    public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
-        Camera.Parameters params = mCamera.getParameters();
-        List<Camera.Size> sizes = params.getSupportedPreviewSizes();
-        Camera.Size selected = sizes.get(0);
-        params.setPreviewSize(selected.width,selected.height);
-        mCamera.setParameters(params);
+            } else if (resultCode == RESULT_CANCELED) {
 
-        mCamera.setDisplayOrientation(90);
-        mCamera.startPreview();
-    }
+                // user cancelled recording
+                Toast.makeText(getApplicationContext(),
+                        "User cancelled video recording", Toast.LENGTH_SHORT)
+                        .show();
 
-    @Override
-    public void surfaceCreated(SurfaceHolder holder) {
-        try {
-            mCamera.setPreviewDisplay(mPreview.getHolder());
-        } catch (Exception e) {
-            e.printStackTrace();
+            } else {
+                // failed to record video
+                Toast.makeText(getApplicationContext(),
+                        "Sorry! Failed to record video", Toast.LENGTH_SHORT)
+                        .show();
+            }
         }
     }
 
-    @Override
-    public void surfaceDestroyed(SurfaceHolder holder) {
-        Log.i("PREVIEW","surfaceDestroyed");
+    private void launchUploadActivity(boolean isImage){
+        Intent i = new Intent(CameraActivity.this, UploadActivity.class);
+        i.putExtra("filePath", fileUri.getPath());
+        i.putExtra("isImage", isImage);
+        startActivity(i);
+    }
+
+    /**
+     * ------------ Helper Methods ----------------------
+     * */
+
+    /**
+     * Creating file uri to store image/video
+     */
+    public Uri getOutputMediaFileUri(int type) {
+        return Uri.fromFile(getOutputMediaFile(type));
+    }
+
+    /**
+     * returning image / video
+     */
+    private static File getOutputMediaFile(int type) {
+
+        // External sdcard location
+        File mediaStorageDir = new File(
+                Environment
+                        .getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES),
+                Config.IMAGE_DIRECTORY_NAME);
+
+        // Create the storage directory if it does not exist
+        if (!mediaStorageDir.exists()) {
+            if (!mediaStorageDir.mkdirs()) {
+                Log.d(TAG, "Oops! Failed create "
+                        + Config.IMAGE_DIRECTORY_NAME + " directory");
+                return null;
+            }
+        }
+
+        // Create a media file name
+        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss",
+                Locale.getDefault()).format(new Date());
+        File mediaFile;
+        if (type == MEDIA_TYPE_IMAGE) {
+            mediaFile = new File(mediaStorageDir.getPath() + File.separator
+                    + "IMG_" + timeStamp + ".jpg");
+        } else if (type == MEDIA_TYPE_VIDEO) {
+            mediaFile = new File(mediaStorageDir.getPath() + File.separator
+                    + "VID_" + timeStamp + ".mp4");
+        } else {
+            return null;
+        }
+
+        return mediaFile;
     }
 }

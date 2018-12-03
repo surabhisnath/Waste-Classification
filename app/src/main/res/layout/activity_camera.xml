@@ -1,43 +1,51 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    tools:context=".CameraActivity">
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:background="@color/view_background"
+    android:baselineAligned="false"
+    android:orientation="vertical" >
 
-    <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-        android:orientation="vertical"
+    <LinearLayout
         android:layout_width="fill_parent"
-        android:layout_height="fill_parent">
-        <SurfaceView
-            android:id="@+id/preview"
-            android:layout_width="fill_parent"
-            android:layout_height="fill_parent"
-            />
-        <RelativeLayout
-            android:layout_width="fill_parent"
-            android:layout_height="100dip"
-            android:layout_alignParentBottom="true"
-            android:gravity="center_vertical"
-            android:background="#A000">
-            <Button
-                android:layout_width="100dip"
-                android:layout_height="wrap_content"
-                android:text="Cancel"
-                android:onClick="onCancelClick"
-                />
-            <Button
-                android:layout_width="100dip"
-                android:layout_height="wrap_content"
-                android:layout_alignParentRight="true"
-                android:text="Snap Photo"
-                android:onClick="onSnapClick"
-                />
-        </RelativeLayout>
-    </RelativeLayout>
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:gravity="center"
+        android:orientation="vertical" >
 
+        <!-- Capture picture button -->
 
+        <Button
+            android:id="@+id/btnCapturePicture"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="20dp"
+            android:background="@color/btn_bg"
+            android:paddingLeft="20dp"
+            android:paddingRight="20dp"
+            android:text="@string/btnTakePicture"
+            android:textColor="@color/white" />
 
-    
-</LinearLayout>
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="20dp"
+            android:gravity="center_horizontal"
+            android:text="@string/or"
+            android:textColor="@color/txt_font" />
+
+        <!-- Record video button -->
+
+        <Button
+            android:id="@+id/btnRecordVideo"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@color/btn_bg"
+            android:paddingLeft="20dp"
+            android:paddingRight="20dp"
+            android:text="@string/btnRecordVideo"
+            android:textColor="@color/white" />
+    </LinearLayout>
+
+</RelativeLayout>
