@@ -4,6 +4,7 @@ import com.example.waste_classification.AndroidMultiPartEntity.ProgressListener;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.concurrent.ExecutionException;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -26,6 +27,8 @@ import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.VideoView;
 
+import okhttp3.Call;
+import okhttp3.Callback;
 import okhttp3.MediaType;
 import okhttp3.MultipartBody;
 import okhttp3.OkHttpClient;
@@ -42,7 +45,7 @@ public class UploadActivity extends Activity {
     private TextView txtPercentage;
     private ImageView imgPreview;
     private VideoView vidPreview;
-    String responseString;
+    String responseString = "hello";
     String s;
     private Button btnUpload;
     long totalSize = 0;
@@ -78,11 +81,66 @@ public class UploadActivity extends Activity {
 
             @Override
             public void onClick(View v) {
-                // uploading the file to server
-                new UploadFileToServer().execute();
+                 //uploading the file to server
+//                    new UploadFileToServer().execute();
+                OkHttpClient client = new OkHttpClient();
+                File image = new File(filePath);
+                RequestBody requestBody = new MultipartBody.Builder().setType(MultipartBody.FORM)
+                        .addFormDataPart("imagefile", "waste_image.png", RequestBody.create(MEDIA_TYPE_PNG, image))
+                        .build();
+
+                Request request = new Request.Builder().url("http://192.168.1.7:8099/class1")
+                        .post(requestBody).build();
+
+                client.newCall(request).enqueue(new Callback() {
+                    @Override
+                    public void onFailure(Call call, IOException e) {
+                        //Toast.makeText(UploadActivity.this, "Failed", Toast.LENGTH_SHORT);
+
+
+                    }
+
+                    @Override
+                    public void onResponse(Call call, Response response) throws IOException {
+
+
+                    }
+                });
+
+                Handler handler = new Handler();
+                handler.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        OkHttpClient client1 = new OkHttpClient();
+
+                        Request request1 = new Request.Builder().url("http://192.168.1.7:8099/class2").build();
+
+                        client1.newCall(request1).enqueue(new Callback() {
+                            @Override
+                            public void onFailure(Call call, IOException e) {
+                                //Toast.makeText(UploadActivity.this, "Failed", Toast.LENGTH_SHORT);
+
+                                s = e.getMessage();
+                            }
+
+                            @Override
+                            public void onResponse(Call call, Response response) throws IOException {
+                                s = response.body().string();
+
+                            }
+                        });
+
+                        showAlert(s);
+                    }
+                }, 150000);
+
+
+
 
             }
         });
+
+
 
     }
 
@@ -137,14 +195,7 @@ public class UploadActivity extends Activity {
         }
 
         @Override
-        protected synchronized String doInBackground(Void... params) {
-            return uploadFile();
-        }
-
-        @SuppressWarnings("deprecation")
-        private String uploadFile() {
-
-
+        protected String doInBackground(Void... params) {
             OkHttpClient client = new OkHttpClient();
             File image = new File(filePath);
             RequestBody requestBody = new MultipartBody.Builder().setType(MultipartBody.FORM)
@@ -153,23 +204,25 @@ public class UploadActivity extends Activity {
 
             Request request = new Request.Builder().url("http://192.168.1.7:8099/class1")
                     .post(requestBody).build();
-            try {
-                Response response = client.newCall(request).execute();
-                responseString = response.message();
-            } catch (Exception e) {
-                responseString = e.getMessage();
-            }
-            new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
+
+            client.newCall(request).enqueue(new Callback() {
                 @Override
-                public void run() {
-                    s = responseString;
+                public void onFailure(Call call, IOException e) {
+                    //Toast.makeText(UploadActivity.this, "Failed", Toast.LENGTH_SHORT);
+                    responseString = "Failed";
                 }
-            }, 100000);
-            return s;
+
+                @Override
+                public void onResponse(Call call, Response response) throws IOException {
+                    responseString = response.message();
+
+                }
+            });
+            return responseString;
         }
 
         @Override
-        protected synchronized void onPostExecute(String result) {
+        protected void onPostExecute(String result) {
             Log.e(TAG, "Response from server: " + result);
 
             // showing the server response in an alert dialogndl
