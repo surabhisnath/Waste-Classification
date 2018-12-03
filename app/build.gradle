@@ -17,6 +17,11 @@ android {
         }
     }
 
+    packagingOptions {
+        exclude 'org/apache/http/version.properties'
+        exclude 'org/apache/http/client/version.properties'
+    }
+
 
 }
 

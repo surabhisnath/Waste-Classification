@@ -15,6 +15,8 @@ import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -40,6 +42,8 @@ public class UploadActivity extends Activity {
     private TextView txtPercentage;
     private ImageView imgPreview;
     private VideoView vidPreview;
+    String responseString;
+    String s;
     private Button btnUpload;
     long totalSize = 0;
 
@@ -76,6 +80,7 @@ public class UploadActivity extends Activity {
             public void onClick(View v) {
                 // uploading the file to server
                 new UploadFileToServer().execute();
+
             }
         });
 
@@ -132,13 +137,13 @@ public class UploadActivity extends Activity {
         }
 
         @Override
-        protected String doInBackground(Void... params) {
+        protected synchronized String doInBackground(Void... params) {
             return uploadFile();
         }
 
         @SuppressWarnings("deprecation")
         private String uploadFile() {
-            String responseString = null;
+
 
             OkHttpClient client = new OkHttpClient();
             File image = new File(filePath);
@@ -146,7 +151,7 @@ public class UploadActivity extends Activity {
                     .addFormDataPart("imagefile", "waste_image.png", RequestBody.create(MEDIA_TYPE_PNG, image))
                     .build();
 
-            Request request = new Request.Builder().url("http://172.20.10.6:8099/class1")
+            Request request = new Request.Builder().url("http://192.168.1.7:8099/class1")
                     .post(requestBody).build();
             try {
                 Response response = client.newCall(request).execute();
@@ -154,14 +159,21 @@ public class UploadActivity extends Activity {
             } catch (Exception e) {
                 responseString = e.getMessage();
             }
-            return  responseString;
+            new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    s = responseString;
+                }
+            }, 100000);
+            return s;
         }
 
         @Override
-        protected void onPostExecute(String result) {
+        protected synchronized void onPostExecute(String result) {
             Log.e(TAG, "Response from server: " + result);
 
-            // showing the server response in an alert dialog
+            // showing the server response in an alert dialogndl
+
             showAlert(result);
 
             super.onPostExecute(result);
@@ -172,8 +184,9 @@ public class UploadActivity extends Activity {
     /**
      * Method to show alert dialog
      * */
-    private void showAlert(String message) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+    private void showAlert(final String message) {
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(UploadActivity.this);
         builder.setMessage(message).setTitle("Response from Servers")
                 .setCancelable(false)
                 .setPositiveButton("OK", new DialogInterface.OnClickListener() {
@@ -183,6 +196,7 @@ public class UploadActivity extends Activity {
                 });
         AlertDialog alert = builder.create();
         alert.show();
+
     }
 
 }
