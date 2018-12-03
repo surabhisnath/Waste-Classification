@@ -27,6 +27,10 @@ import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.VideoView;
 
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.select.Elements;
+
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.MediaType;
@@ -82,7 +86,7 @@ public class UploadActivity extends Activity {
             @Override
             public void onClick(View v) {
                  //uploading the file to server
-//                    new UploadFileToServer().execute();
+
                 OkHttpClient client = new OkHttpClient();
                 File image = new File(filePath);
                 RequestBody requestBody = new MultipartBody.Builder().setType(MultipartBody.FORM)
@@ -111,32 +115,9 @@ public class UploadActivity extends Activity {
                 handler.postDelayed(new Runnable() {
                     @Override
                     public void run() {
-                        OkHttpClient client1 = new OkHttpClient();
-
-                        Request request1 = new Request.Builder().url("http://192.168.1.7:8099/class2").build();
-
-                        client1.newCall(request1).enqueue(new Callback() {
-                            @Override
-                            public void onFailure(Call call, IOException e) {
-                                //Toast.makeText(UploadActivity.this, "Failed", Toast.LENGTH_SHORT);
-
-                                s = e.getMessage();
-                            }
-
-                            @Override
-                            public void onResponse(Call call, Response response) throws IOException {
-                                s = response.body().string();
-
-                            }
-                        });
-
-                        showAlert(s);
+                        new UploadFileToServer().execute();
                     }
                 }, 150000);
-
-
-
-
             }
         });
 
@@ -196,29 +177,17 @@ public class UploadActivity extends Activity {
 
         @Override
         protected String doInBackground(Void... params) {
-            OkHttpClient client = new OkHttpClient();
-            File image = new File(filePath);
-            RequestBody requestBody = new MultipartBody.Builder().setType(MultipartBody.FORM)
-                    .addFormDataPart("imagefile", "waste_image.png", RequestBody.create(MEDIA_TYPE_PNG, image))
-                    .build();
 
-            Request request = new Request.Builder().url("http://192.168.1.7:8099/class1")
-                    .post(requestBody).build();
+            try {
+                Document mBlogDocument = Jsoup.connect("http://192.168.1.7:8099/class2").get();
+                Elements mElementDataSize = mBlogDocument.select("body");
+                return mElementDataSize.text();
 
-            client.newCall(request).enqueue(new Callback() {
-                @Override
-                public void onFailure(Call call, IOException e) {
-                    //Toast.makeText(UploadActivity.this, "Failed", Toast.LENGTH_SHORT);
-                    responseString = "Failed";
-                }
+            } catch (Exception e) {
 
-                @Override
-                public void onResponse(Call call, Response response) throws IOException {
-                    responseString = response.message();
+            }
 
-                }
-            });
-            return responseString;
+            return "FOUL!";
         }
 
         @Override
