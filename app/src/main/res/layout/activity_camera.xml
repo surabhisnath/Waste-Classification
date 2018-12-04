@@ -39,6 +39,7 @@
 
         <Button
             android:id="@+id/btnRecordVideo"
+            android:visibility="invisible"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:background="@color/btn_bg"
