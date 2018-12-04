@@ -69,7 +69,6 @@ public class UploadActivity extends Activity {
 
         // image or video path that is captured in previous activity
         filePath = i.getStringExtra("filePath");
-
         // boolean flag to identify the media type, image or video
         boolean isImage = i.getBooleanExtra("isImage", true);
 
