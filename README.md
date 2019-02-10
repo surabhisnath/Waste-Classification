@@ -1,0 +1,3 @@
+# Waste-Classification
+
+App designed on Android Studio to assist waste classification and management. 3 classifiers were trained using IBM Watson object detection API - 1) for detecting biodegradable/not, 2) for detecting recycleable/not, 3) for detecting waste cataegory (cardboard / food / metal / paper / plastic). The following options are implemented: 1) option to capture an image of any object and display detection results from all 3 classifiers, 2) option to upload image from storage and display detection results, 3) option to gain general information about waste management, 4) option to contact waste management agencies and organizations 
